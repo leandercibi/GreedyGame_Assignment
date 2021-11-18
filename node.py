@@ -90,34 +90,44 @@ tree_db.update_node('US','Mobile',20,40)
 #class for the /insert URI
 class InsertVals(Resource):
     def post(self):
-        data = request.get_json()
-        vals = {'country':None,'device':None,'webreq':None,'timespent': None}
-        for d in data['dim']:
-            vals[d['key']]=d['val']
-        for d in data['metrics']:
-            vals[d['key']]=d['val']
-        tree_db.update_node(vals['country'],vals['device'],vals['webreq'],vals['timespent'])
-        return 201
+        try:
+            data = request.get_json()
+            vals = {'country':None,'device':None,'webreq':None,'timespent': None}
+            for d in data['dim']:
+                vals[d['key']]=d['val']
+            for d in data['metrics']:
+                vals[d['key']]=d['val']
+            tree_db.update_node(vals['country'],vals['device'],vals['webreq'],vals['timespent'])
+            return 201
+        except:
+            return jsonify("invalid json format")
 
 
 #class for the /query URI
 class Query(Resource):
     def post(self):
-        data = request.get_json()
-        country = data['dim'][0].get('val')
-        out = tree_db.search_p1Node(country)
-        if len(data['dim'])>1:
-            device = data['dim'][1].get('val')
-            out = tree_db.search_c1Node(device,out)
-            return jsonify({
-                "dim": [{"key": "device", "val": out.Device}],
-                "metrics": [{"key": "webreq", "val": out.WebReq}, {"key": "timespent", "val": out.TimeSpent}]
-            })
+        try:
+            data = request.get_json()
+            country = data['dim'][0].get('val')
+            out = tree_db.search_p1Node(country)
+            if out==False:
+                return jsonify("Country not found")
+            if len(data['dim'])>1:
+                device = data['dim'][1].get('val')
+                out = tree_db.search_c1Node(device,out)
+                if out == False:
+                    return jsonify("Device not found")
+                return jsonify({
+                    "dim": [{"key": "device", "val": out.Device}],
+                    "metrics": [{"key": "webreq", "val": out.WebReq}, {"key": "timespent", "val": out.TimeSpent}]
+                })
 
-        return jsonify({
-            "dim": [{"key": "country","val": out.Country}],
-            "metrics": [{"key": "webreq","val": out.WebReq},{"key": "timespent","val": out.TimeSpent}]
-        })
+            return jsonify({
+                "dim": [{"key": "country","val": out.Country}],
+                "metrics": [{"key": "webreq","val": out.WebReq},{"key": "timespent","val": out.TimeSpent}]
+            })
+        except:
+            return jsonify('Invalid json format')
 
 
 
