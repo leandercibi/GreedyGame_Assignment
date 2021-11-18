@@ -103,7 +103,11 @@ class InsertVals(Resource):
             return jsonify("invalid json format")
 
 
-#class for the /query URI
+'''
+class for the /query URI
+Made this function to return either the webrequest and timespent for a country ,
+or even for a particular device from that country
+'''
 class Query(Resource):
     def post(self):
         try:
