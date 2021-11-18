@@ -3,7 +3,9 @@ from flask_restful import Resource, Api
 
 app = Flask(__name__)
 api = Api(app)
+#since the data type has 3 definitive levles, i have initiated 3 levels of nodes
 
+#define class for root node P1
 class NodeP1():
     def __init__(self, WebReq, TimeSpent):
         self.WebReq = WebReq
@@ -12,25 +14,31 @@ class NodeP1():
     def add_child(self, obj):
         self.children.append(obj)
 
+#define class for parent node P2
 class NodeP2(NodeP1):
     def __init__(self, WebReq, TimeSpent, Country):
         super().__init__(WebReq,TimeSpent)
         self.Country = Country
 
-
+#define class for child node C1
 class NodeC1(NodeP1):
     def __init__(self, WebReq, TimeSpent, Device):
         super().__init__(WebReq, TimeSpent)
         self.Device = Device
 
+#Initialize root node and set values to zero
 Root_Node = NodeP1(0,0)
 
+
+#Define tree class with methods to add, search and update node values
 class Tree():
     def __init__(self,root):
         self.root = root
 
     def add_node(self,node):
         self.root.add_child(node)
+
+    #searches nodes based on country name in the p1 level of nodes
     def search_p1Node(self,country):
         foundp1 = False
 
@@ -40,6 +48,7 @@ class Tree():
                 break
         return foundp1
 
+    # searches nodes based on device name in the c1 level of nodes
     def search_c1Node(self,device,node):
         foundc1 = False
         for c1 in node.children:
@@ -48,6 +57,7 @@ class Tree():
                 break
         return foundc1
 
+    #updates the value of node if found, else, creates a node
     def update_node(self,country,device,webreq,timespent):
         self.root.WebReq += webreq
         self.root.TimeSpent += timespent
@@ -68,6 +78,7 @@ class Tree():
             temp_node.add_child(NodeC1(webreq,timespent,device))
             self.add_node(temp_node)
 
+#root node set in Tree
 tree_db = Tree(root=Root_Node)
 
 tree_db.update_node('US','Tablet',30,50)
@@ -75,6 +86,8 @@ tree_db.update_node('IN','Mobile',70,30)
 tree_db.update_node('US','Tablet',10,60)
 tree_db.update_node('US','Mobile',20,40)
 
+
+#class for the /insert URI
 class InsertVals(Resource):
     def post(self):
         data = request.get_json()
@@ -86,6 +99,8 @@ class InsertVals(Resource):
         tree_db.update_node(vals['country'],vals['device'],vals['webreq'],vals['timespent'])
         return 201
 
+
+#class for the /query URI
 class Query(Resource):
     def post(self):
         data = request.get_json()
